@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChainPatrol — Brand Protection Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0A0D14;
+  --surface:  #111520;
+  --raised:   #171D2D;
+  --card:     #1C2338;
+  --border:   rgba(255,255,255,0.07);
+  --border-hi:rgba(99,179,237,0.3);
+  --red:      #E53E3E;
+  --red-dim:  rgba(229,62,62,0.12);
+  --green:    #38A169;
+  --green-dim:rgba(56,161,105,0.12);
+  --amber:    #D69E2E;
+  --amber-dim:rgba(214,158,46,0.12);
+  --blue:     #63B3ED;
+  --blue-dim: rgba(99,179,237,0.1);
+  --purple:   #9F7AEA;
+  --text:     #E2E8F0;
+  --text-mid: #94A3B8;
+  --text-dim: #4A5568;
+  --sans:     'Space Grotesk', system-ui, sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+  --r:        6px; --r-lg:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden;}
+
+/* TOPBAR */
+.topbar{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;}
+.logo{font-size:16px;font-weight:700;color:white;display:flex;align-items:center;gap:8px;}
+.logo-shield{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--red),#C53030);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.topbar-divider{width:1px;height:18px;background:var(--border);}
+.topbar-sub{font-size:12px;color:var(--text-mid);font-weight:500;}
+.pipe-tabs{display:flex;gap:2px;margin-left:16px;}
+.ptab{padding:5px 14px;border-radius:5px;font-size:12px;font-weight:600;color:var(--text-mid);cursor:pointer;background:none;border:none;transition:all 0.15s;font-family:var(--sans);display:flex;align-items:center;gap:6px;}
+.ptab:hover{color:var(--text);}
+.ptab.active{background:rgba(255,255,255,0.07);color:white;}
+.ptab-dot{width:6px;height:6px;border-radius:50%;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.threat-counter{font-family:var(--mono);font-size:11px;color:var(--red);background:var(--red-dim);border:1px solid rgba(229,62,62,0.25);padding:4px 10px;border-radius:4px;letter-spacing:0.04em;}
+.threat-counter span{animation:countup 3s ease-out forwards;}
+@keyframes countup{from{opacity:0.5}to{opacity:1}}
+
+/* MAIN */
+.main{flex:1;display:flex;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:14px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.sl{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;padding:8px 8px 4px;margin-top:6px;}
+.sl:first-child{margin-top:0;}
+.slink{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);cursor:pointer;font-size:12px;font-weight:500;color:var(--text-mid);transition:all 0.12s;}
+.slink:hover{background:var(--raised);color:var(--text);}
+.slink.active{background:rgba(99,179,237,0.08);color:var(--blue);}
+.slink-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.slink-count{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;}
+
+/* DETECTION VIEW */
+#viewDetection{display:flex;flex-direction:column;height:100%;}
+.det-top{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface);}
+.det-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.dstat{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;}
+.dstat-label{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;}
+.dstat-val{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1;margin-bottom:3px;}
+.dstat-sub{font-size:10px;color:var(--text-dim);}
+
+/* THREAT FEED */
+.threat-feed{flex:1;overflow-y:auto;}
+.feed-header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;}
+.feed-label{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;}
+.feed-filters{display:flex;gap:6px;margin-left:auto;}
+.ffilter{font-size:11px;font-weight:500;padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;transition:all 0.15s;font-family:var(--sans);}
+.ffilter:hover{border-color:var(--blue);color:var(--blue);}
+.ffilter.active{background:var(--blue-dim);border-color:var(--border-hi);color:var(--blue);}
+
+.threat-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;}
+.threat-row:hover{background:var(--raised);}
+.threat-row.selected{background:rgba(99,179,237,0.05);border-left:2px solid var(--blue);}
+.th-type{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.th-info{flex:1;min-width:0;}
+.th-url{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.th-meta{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.th-conf{font-family:var(--mono);font-size:11px;font-weight:600;min-width:40px;text-align:right;}
+.th-sev{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:0.05em;flex-shrink:0;}
+.th-source{font-size:10px;color:var(--text-dim);min-width:60px;text-align:right;}
+.th-actions{display:flex;gap:5px;flex-shrink:0;}
+.th-btn{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;transition:all 0.15s;font-family:var(--sans);}
+.th-btn.confirm{border-color:rgba(56,161,105,0.4);color:var(--green);background:var(--green-dim);}
+.th-btn.dismiss{border-color:rgba(229,62,62,0.3);color:var(--red);background:var(--red-dim);}
+.th-btn:hover{opacity:0.8;}
+
+/* RULE BACKTESTER */
+#viewBacktest{padding:20px;display:flex;flex-direction:column;gap:14px;height:100%;overflow-y:auto;}
+.bt-header{display:flex;align-items:center;justify-content:space-between;}
+.bt-title{font-size:18px;font-weight:700;}
+.bt-subtitle{font-size:12px;color:var(--text-mid);margin-top:2px;}
+.bt-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;}
+.bt-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;}
+.bt-panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.bt-panel-title{font-size:12px;font-weight:700;}
+.bt-panel-meta{font-size:10px;color:var(--text-dim);font-family:var(--mono);}
+.bt-panel-body{padding:14px 16px;flex:1;}
+
+/* RULE EDITOR */
+.rule-editor{width:100%;background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-family:var(--mono);font-size:12px;color:var(--text);resize:none;outline:none;height:180px;line-height:1.6;transition:border-color 0.15s;}
+.rule-editor:focus{border-color:var(--blue);}
+.rule-controls{display:flex;gap:8px;margin-top:10px;align-items:center;}
+.bt-run-btn{padding:8px 20px;border-radius:var(--r);background:var(--blue);color:#0A0D14;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:var(--sans);display:flex;align-items:center;gap:6px;}
+.bt-run-btn:hover{background:#90CDF4;transform:translateY(-1px);}
+.bt-run-btn.running{background:var(--amber);cursor:default;}
+.bt-run-btn.done{background:var(--green);}
+.window-select{background:var(--raised);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:7px 10px;font-size:11px;font-family:var(--sans);cursor:pointer;outline:none;}
+.window-select option{background:var(--surface);}
+
+/* RESULTS PANEL */
+.bt-metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.bt-metric{background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:10px;}
+.bt-metric-label{font-size:10px;color:var(--text-dim);font-weight:500;margin-bottom:4px;}
+.bt-metric-val{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1;}
+.bt-chart{height:100px;display:flex;align-items:flex-end;gap:2px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:8px;}
+.bt-bar{flex:1;border-radius:2px 2px 0 0;transition:height 0.4s ease;cursor:pointer;}
+.bt-bar:hover{opacity:0.8;}
+.bt-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px;padding:0 8px;}
+.bt-sample-list{font-size:11px;margin-top:10px;}
+.bt-sample{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.bt-sample:last-child{border-bottom:none;}
+.bt-sample-url{font-family:var(--mono);font-size:10px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-mid);}
+.bt-sample-result{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;}
+
+/* TAKEDOWN VIEW */
+#viewTakedown{padding:20px;display:flex;flex-direction:column;gap:14px;height:100%;overflow-y:auto;}
+.td-pipeline{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.td-stage{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.td-stage-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.td-stage-icon{font-size:14px;}
+.td-stage-title{font-size:12px;font-weight:700;flex:1;}
+.td-stage-count{font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;}
+.td-item{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;cursor:pointer;transition:background 0.12s;}
+.td-item:hover{background:var(--raised);}
+.td-item:last-child{border-bottom:none;}
+.td-item-url{font-family:var(--mono);font-size:10px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.td-item-meta{display:flex;align-items:center;gap:8px;}
+.td-item-platform{font-size:10px;font-weight:600;}
+.td-item-age{font-size:10px;color:var(--text-dim);}
+.td-item-action{margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;border:none;cursor:pointer;font-family:var(--sans);transition:all 0.15s;}
+
+/* STATUS */
+.statusbar{height:26px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:20px;flex-shrink:0;}
+.sb{font-family:var(--mono);font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
+.sb-dot{width:5px;height:5px;border-radius:50%;}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* DEMO NOTE */
+.demo-note{position:fixed;bottom:34px;left:50%;transform:translateX(-50%);background:var(--raised);border:1px solid rgba(99,179,237,0.3);border-radius:20px;padding:7px 18px;font-size:11px;color:var(--text-dim);z-index:100;white-space:nowrap;pointer-events:none;}
+.demo-note strong{color:var(--blue);}
+
+/* SEARCH */
+.search-wrap{display:flex;align-items:center;gap:6px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;flex:1;}
+.search-wrap input{background:none;border:none;outline:none;font-size:12px;color:var(--text);width:100%;font-family:var(--sans);}
+.search-wrap input::placeholder{color:var(--text-dim);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.anim{animation:fadeUp 0.3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-shield">🛡</div>
+    ChainPatrol
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-sub">Brand Protection Platform</div>
+  <div class="pipe-tabs">
+    <button class="ptab active" onclick="switchView('detection',this)">
+      <div class="ptab-dot" style="background:var(--red)"></div>Detection
+    </button>
+    <button class="ptab" onclick="switchView('backtest',this)">
+      <div class="ptab-dot" style="background:var(--blue)"></div>Rule Backtester
+    </button>
+    <button class="ptab" onclick="switchView('takedown',this)">
+      <div class="ptab-dot" style="background:var(--green)"></div>Takedowns
+    </button>
+  </div>
+  <div class="topbar-right">
+    <div class="threat-counter" id="threatCounter">⚡ 4,821,044 threats scanned today</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="sidebar">
+    <div class="sl">Detection</div>
+    <div class="slink active" onclick="switchSidebar(this,'detection')"><div class="slink-dot" style="background:var(--red)"></div>Live Feed <span class="slink-count" style="background:var(--red-dim);color:var(--red)">847</span></div>
+    <div class="slink" onclick="switchSidebar(this,'detection')"><div class="slink-dot" style="background:var(--text-dim)"></div>Fake Apps <span class="slink-count" style="background:var(--amber-dim);color:var(--amber)">23</span></div>
+    <div class="slink" onclick="switchSidebar(this,'detection')"><div class="slink-dot" style="background:var(--text-dim)"></div>Phishing Sites</div>
+    <div class="slink" onclick="switchSidebar(this,'detection')"><div class="slink-dot" style="background:var(--text-dim)"></div>Social Impersonation</div>
+    <div class="slink" onclick="switchSidebar(this,'detection')"><div class="slink-dot" style="background:var(--text-dim)"></div>Domain Squatting</div>
+
+    <div class="sl">Rules</div>
+    <div class="slink" onclick="switchSidebar(this,'backtest')"><div class="slink-dot" style="background:var(--blue)"></div>Rule Library</div>
+    <div class="slink" onclick="switchSidebar(this,'backtest')"><div class="slink-dot" style="background:var(--blue)"></div>Backtester</div>
+    <div class="slink" onclick="switchSidebar(this,'backtest')"><div class="slink-dot" style="background:var(--text-dim)"></div>Enrichments</div>
+
+    <div class="sl">Takedowns</div>
+    <div class="slink" onclick="switchSidebar(this,'takedown')"><div class="slink-dot" style="background:var(--green)"></div>Pipeline <span class="slink-count" style="background:var(--green-dim);color:var(--green)">142</span></div>
+    <div class="slink" onclick="switchSidebar(this,'takedown')"><div class="slink-dot" style="background:var(--text-dim)"></div>Completed</div>
+    <div class="slink" onclick="switchSidebar(this,'takedown')"><div class="slink-dot" style="background:var(--text-dim)"></div>Escalated</div>
+
+    <div class="sl">Platform</div>
+    <div class="slink" onclick="showToast('📊','Opening metrics dashboard')"><div class="slink-dot" style="background:var(--text-dim)"></div>Metrics</div>
+    <div class="slink" onclick="showToast('⚙️','Opening rule configuration')"><div class="slink-dot" style="background:var(--text-dim)"></div>Configuration</div>
+    <div class="slink" onclick="showToast('🔌','Opening API documentation')"><div class="slink-dot" style="background:var(--text-dim)"></div>API Docs</div>
+  </div>
+
+  <div class="content" id="mainContent">
+    <!-- DETECTION VIEW -->
+    <div id="viewDetection" style="display:flex;flex-direction:column;height:100%">
+      <div class="det-top">
+        <div class="search-wrap">
+          <span style="color:var(--text-dim);font-size:12px">🔍</span>
+          <input type="text" placeholder="Search threats by URL, domain, platform...">
+        </div>
+        <button class="ffilter active" style="flex-shrink:0">All</button>
+        <button class="ffilter" style="flex-shrink:0">🔴 Critical</button>
+        <button class="ffilter" style="flex-shrink:0">📱 Fake Apps</button>
+        <button class="ffilter" style="flex-shrink:0">🌐 Phishing</button>
+        <button class="ffilter" style="flex-shrink:0">👤 Social</button>
+      </div>
+
+      <div class="det-stats">
+        <div class="dstat">
+          <div class="dstat-label">New Threats Today</div>
+          <div class="dstat-val" style="color:var(--red)" id="newThreats">847</div>
+          <div class="dstat-sub"><span style="color:var(--red)">↑ 12%</span> vs yesterday</div>
+        </div>
+        <div class="dstat">
+          <div class="dstat-label">Auto-Confirmed</div>
+          <div class="dstat-val" style="color:var(--amber)">612</div>
+          <div class="dstat-sub">72% auto-rate · rules fired</div>
+        </div>
+        <div class="dstat">
+          <div class="dstat-label">Takedowns Initiated</div>
+          <div class="dstat-val" style="color:var(--green)">381</div>
+          <div class="dstat-sub">Avg 4.2h to removal</div>
+        </div>
+        <div class="dstat">
+          <div class="dstat-label">False Positive Rate</div>
+          <div class="dstat-val" style="color:var(--blue)">0.3%</div>
+          <div class="dstat-sub">Last 7 days · 847 reviewed</div>
+        </div>
+      </div>
+
+      <div class="feed-header">
+        <div class="feed-label">Live Threat Feed</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:10px">Updated 4s ago</div>
+        <div class="feed-filters">
+          <button class="ffilter active">Needs Review</button>
+          <button class="ffilter">All</button>
+          <button class="ffilter">⬇ Export</button>
+        </div>
+      </div>
+
+      <div class="threat-feed" id="threatFeed"></div>
+    </div>
+
+    <!-- BACKTEST VIEW -->
+    <div id="viewBacktest" style="display:none;padding:20px;display:none;flex-direction:column;gap:14px;overflow-y:auto;">
+      <div>
+        <div style="font-size:18px;font-weight:700">Rule Backtester</div>
+        <div style="font-size:12px;color:var(--text-mid);margin-top:3px">Write a detection rule and verify its historical accuracy before rolling it out to avoid false positives.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1">
+        <!-- RULE EDITOR -->
+        <div class="bt-panel">
+          <div class="bt-panel-header">
+            <div class="bt-panel-title">Rule Editor</div>
+            <div class="bt-panel-meta">YAML · v2 syntax</div>
+          </div>
+          <div class="bt-panel-body">
+            <textarea class="rule-editor" id="ruleEditor">name: fake_app_impersonation_v2
+description: Detect fake apps impersonating crypto wallets on app stores
+severity: critical
+sources: [apple_app_store, google_play]
+
+conditions:
+  - type: name_similarity
+    threshold: 0.85
+    target_brands: ["MetaMask", "Coinbase Wallet", "Trust Wallet"]
+  - type: developer_mismatch
+    known_developers: ["MetaMask", "Coinbase", "Six Days LLC"]
+  - type: keyword_match
+    keywords: ["crypto", "wallet", "defi", "web3"]
+    min_matches: 2
+  - type: recent_publish
+    days: 30
+
+actions:
+  - flag_for_review
+  - enrich_with_store_data
+  - initiate_takedown_if_confidence_gt: 0.92</textarea>
+            <div class="rule-controls">
+              <button class="bt-run-btn" id="btRunBtn" onclick="runBacktest()">
+                <span id="btIcon">▶</span> <span id="btLabel">Run Backtest</span>
+              </button>
+              <select class="window-select" id="windowSelect">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <span style="font-size:11px;color:var(--text-dim)">against historical threat data</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULTS PANEL -->
+        <div class="bt-panel">
+          <div class="bt-panel-header">
+            <div class="bt-panel-title">Backtest Results</div>
+            <div class="bt-panel-meta" id="btResultMeta">Run a backtest to see results</div>
+          </div>
+          <div class="bt-panel-body" id="btResults">
+            <div style="text-align:center;padding:40px 20px;color:var(--text-dim)">
+              <div style="font-size:28px;margin-bottom:10px;opacity:0.4">📊</div>
+              <div style="font-size:12px;font-weight:500;color:var(--text-mid)">No results yet</div>
+              <div style="font-size:11px;margin-top:4px">Write a rule and click Run Backtest</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULE LIBRARY -->
+      <div class="bt-panel" style="flex:none">
+        <div class="bt-panel-header">
+          <div class="bt-panel-title">Rule Library</div>
+          <div class="bt-panel-meta">12 active rules · 4 in staging</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+          ${[
+            {name:'fake_app_impersonation_v2',score:'96.2%',status:'PROD',color:'var(--green)'},
+            {name:'phishing_domain_lookalike',score:'94.8%',status:'PROD',color:'var(--green)'},
+            {name:'social_account_clone',score:'91.3%',status:'PROD',color:'var(--green)'},
+            {name:'app_store_keyword_abuse',score:'87.1%',status:'STAGING',color:'var(--amber)'},
+          ].map(r => `<div style="padding:12px 16px;border-right:1px solid var(--border);cursor:pointer" onclick="loadRule('${r.name}')">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-mid);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:${r.color}">${r.score}</span>
+              <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:${r.status==='PROD'?'var(--green-dim)':'var(--amber-dim)'};color:${r.status==='PROD'?'var(--green)':'var(--amber)'}">${r.status}</span>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAKEDOWN VIEW -->
+    <div id="viewTakedown" style="display:none;padding:20px;flex-direction:column;gap:14px;overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:18px;font-weight:700">Takedown Pipeline</div>
+          <div style="font-size:12px;color:var(--text-mid);margin-top:3px">142 active takedown requests across 8 platforms</div>
+        </div>
+        <button class="bt-run-btn" onclick="showToast('📤','Bulk takedown request submitted to Apple, Google, Cloudflare')">Submit Bulk Request</button>
+      </div>
+      <div class="td-pipeline" id="takedownPipeline"></div>
+      <div class="bt-panel" style="flex:none">
+        <div class="bt-panel-header"><div class="bt-panel-title">Platform Response Times — Last 30 days</div></div>
+        <div style="padding:14px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          ${[
+            {platform:'Apple App Store',avg:'18h',sla:'48h',pct:92,color:'var(--green)'},
+            {platform:'Google Play',avg:'24h',sla:'48h',pct:87,color:'var(--green)'},
+            {platform:'Cloudflare',avg:'2h',sla:'24h',pct:99,color:'var(--green)'},
+            {platform:'Twitter/X',avg:'72h',sla:'48h',pct:61,color:'var(--red)'},
+          ].map(p => `<div style="background:var(--raised);border:1px solid var(--border);border-radius:var(--r);padding:10px">
+            <div style="font-size:11px;font-weight:600;margin-bottom:6px">${p.platform}</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${p.color}">${p.avg}</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">avg · SLA ${p.sla}</div>
+            <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${p.pct}%;background:${p.color};border-radius:2px"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="sb"><div class="sb-dot pulse" style="background:var(--green)"></div>Detection pipeline live</div>
+  <div class="sb">Processing 4.8M domains/day · 12 sources</div>
+  <div class="sb">LLM scanning · image recognition · rule engine</div>
+  <div class="sb" style="margin-left:auto">Built for ChainPatrol by Jaivik Parekh</div>
+</div>
+
+<div class="demo-note">Built for <strong>ChainPatrol</strong> by <strong>Jaivik Parekh</strong> · jaivikparekh1320@gmail.com</div>
+
+<script>
+/* ══════════ DATA ══════════ */
+const THREATS = [
+  {id:1,type:'📱',typeBg:'var(--red-dim)',url:'com.metamask.wallet.fake.android',meta:'Google Play · Fake App · Published 2d ago',conf:98,sev:'CRITICAL',sevBg:'var(--red-dim)',sevColor:'var(--red)',source:'App Store Scanner'},
+  {id:2,type:'🌐',typeBg:'var(--amber-dim)',url:'metamask-airdrop-2026.com',meta:'Phishing Site · Lookalike domain · Active 6h',conf:94,sev:'HIGH',sevBg:'var(--amber-dim)',sevColor:'var(--amber)',source:'Domain Monitor'},
+  {id:3,type:'👤',typeBg:'var(--purple)+"22"',url:'@MetaMask_Official_Support',meta:'Twitter/X · Impersonation account · 4.2K followers',conf:91,sev:'HIGH',sevBg:'var(--amber-dim)',sevColor:'var(--amber)',source:'Social Scanner'},
+  {id:4,type:'📱',typeBg:'var(--red-dim)',url:'Coinbase.Wallet.Pro.App',meta:'Apple App Store · Fake App · 847 downloads',conf:97,sev:'CRITICAL',sevBg:'var(--red-dim)',sevColor:'var(--red)',source:'App Store Scanner'},
+  {id:5,type:'🌐',typeBg:'var(--amber-dim)',url:'coinbase-wallet-support.xyz',meta:'Phishing Site · SSL cert · Support impersonation',conf:89,sev:'HIGH',sevBg:'var(--amber-dim)',sevColor:'var(--amber)',source:'Domain Monitor'},
+  {id:6,type:'👤',typeBg:'rgba(159,122,234,0.2)',url:'@Arbitrum_Official_Help',meta:'Telegram · Impersonation · Fake support bot',conf:86,sev:'MEDIUM',sevBg:'rgba(99,179,237,0.12)',sevColor:'var(--blue)',source:'Social Scanner'},
+  {id:7,type:'📱',typeBg:'var(--red-dim)',url:'Trust.Wallet.DeFi.Plus',meta:'Google Play · Fake App · Requests seed phrase',conf:99,sev:'CRITICAL',sevBg:'var(--red-dim)',sevColor:'var(--red)',source:'App Store Scanner'},
+  {id:8,type:'🌐',typeBg:'var(--amber-dim)',url:'arbitrum-bridge-claim.net',meta:'Phishing · Bridge impersonation · Token drainer',conf:96,sev:'CRITICAL',sevBg:'var(--red-dim)',sevColor:'var(--red)',source:'Domain Monitor'},
+];
+
+const TAKEDOWN_DATA = [
+  {stage:'Pending Review', color:'var(--amber)', countBg:'var(--amber-dim)', countColor:'var(--amber)', count:38, items:[
+    {url:'com.trustwallet.fake.v2',platform:'Google Play',age:'2h ago',btnLabel:'Review',btnStyle:'background:var(--blue-dim);color:var(--blue);border:1px solid rgba(99,179,237,0.3)'},
+    {url:'metamask-wallet-pro.xyz',platform:'Cloudflare',age:'4h ago',btnLabel:'Review',btnStyle:'background:var(--blue-dim);color:var(--blue);border:1px solid rgba(99,179,237,0.3)'},
+    {url:'Coinbase.Pro.Wallet.App',platform:'Apple App Store',age:'6h ago',btnLabel:'Review',btnStyle:'background:var(--blue-dim);color:var(--blue);border:1px solid rgba(99,179,237,0.3)'},
+  ]},
+  {stage:'Request Sent', color:'var(--blue)', countBg:'var(--blue-dim)', countColor:'var(--blue)', count:81, items:[
+    {url:'@MetaMask_Support_Official',platform:'Twitter/X',age:'12h ago',btnLabel:'Follow Up',btnStyle:'background:var(--amber-dim);color:var(--amber);border:1px solid rgba(214,158,46,0.3)'},
+    {url:'arbitrum-airdrop-2026.io',platform:'Namecheap',age:'18h ago',btnLabel:'Follow Up',btnStyle:'background:var(--amber-dim);color:var(--amber);border:1px solid rgba(214,158,46,0.3)'},
+    {url:'Trust.Wallet.DeFi.Plus',platform:'Google Play',age:'20h ago',btnLabel:'Follow Up',btnStyle:'background:var(--amber-dim);color:var(--amber);border:1px solid rgba(214,158,46,0.3)'},
+  ]},
+  {stage:'Completed', color:'var(--green)', countBg:'var(--green-dim)', countColor:'var(--green)', count:23, items:[
+    {url:'coinbase-wallet-fake-app',platform:'Apple App Store',age:'2d ago',btnLabel:'✓ Removed',btnStyle:'background:var(--green-dim);color:var(--green);border:1px solid rgba(56,161,105,0.3)'},
+    {url:'metamask-support-scam.com',platform:'Cloudflare',age:'3d ago',btnLabel:'✓ Removed',btnStyle:'background:var(--green-dim);color:var(--green);border:1px solid rgba(56,161,105,0.3)'},
+    {url:'@TrustWallet_Help_Desk',platform:'Twitter/X',age:'4d ago',btnLabel:'✓ Removed',btnStyle:'background:var(--green-dim);color:var(--green);border:1px solid rgba(56,161,105,0.3)'},
+  ]},
+];
+
+/* ══════════ RENDER ══════════ */
+function renderThreats() {
+  document.getElementById('threatFeed').innerHTML = THREATS.map(t => `
+    <div class="threat-row" onclick="selectThreat(this)">
+      <div class="th-type" style="background:${t.typeBg}">${t.type}</div>
+      <div class="th-info">
+        <div class="th-url">${t.url}</div>
+        <div class="th-meta">${t.meta}</div>
+      </div>
+      <div class="th-conf" style="color:${t.conf>=95?'var(--red)':t.conf>=88?'var(--amber)':'var(--blue)'}">${t.conf}%</div>
+      <div class="th-sev" style="background:${t.sevBg};color:${t.sevColor}">${t.sev}</div>
+      <div class="th-source">${t.source}</div>
+      <div class="th-actions">
+        <button class="th-btn confirm" onclick="confirmThreat(event,this)">Confirm</button>
+        <button class="th-btn dismiss" onclick="dismissThreat(event,this)">Dismiss</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderTakedowns() {
+  document.getElementById('takedownPipeline').innerHTML = TAKEDOWN_DATA.map(s => `
+    <div class="td-stage">
+      <div class="td-stage-header">
+        <div class="td-stage-title">${s.stage}</div>
+        <div class="td-stage-count" style="background:${s.countBg};color:${s.countColor}">${s.count}</div>
+      </div>
+      ${s.items.map(i => `
+        <div class="td-item">
+          <div class="td-item-url">${i.url}</div>
+          <div class="td-item-meta">
+            <span class="td-item-platform" style="color:${s.color}">${i.platform}</span>
+            <span class="td-item-age">${i.age}</span>
+            <button class="td-item-action" style="${i.btnStyle}" onclick="showToast('📋','${i.url} — action taken')">${i.btnLabel}</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+/* ══════════ INTERACTIONS ══════════ */
+function selectThreat(el) {
+  document.querySelectorAll('.threat-row').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function confirmThreat(e, btn) {
+  e.stopPropagation();
+  btn.textContent = '✓ Confirmed';
+  btn.classList.remove('confirm');
+  btn.style.background = 'var(--green-dim)';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'rgba(56,161,105,0.3)';
+  btn.parentElement.querySelector('.dismiss').style.display = 'none';
+  showToast('⚡', 'Threat confirmed — takedown initiated');
+  const val = parseInt(document.getElementById('newThreats').textContent);
+  document.getElementById('newThreats').textContent = val - 1;
+}
+
+function dismissThreat(e, btn) {
+  e.stopPropagation();
+  btn.closest('.threat-row').style.opacity = '0.4';
+  showToast('✓', 'Threat dismissed — marked as false positive');
+}
+
+/* ══════════ BACKTEST ══════════ */
+async function runBacktest() {
+  const btn = document.getElementById('btRunBtn');
+  if (btn.classList.contains('running')) return;
+  btn.classList.add('running');
+  document.getElementById('btIcon').textContent = '⏳';
+  document.getElementById('btLabel').textContent = 'Running…';
+  document.getElementById('btResultMeta').textContent = 'Scanning historical data…';
+  document.getElementById('btResults').innerHTML = `
+    <div style="text-align:center;padding:30px 20px;color:var(--text-dim)">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--blue)" id="btProgress">Scanning App Store data (day 1/30)…</div>
+    </div>`;
+
+  const days = parseInt(document.getElementById('windowSelect').value);
+  const progressMsgs = [
+    `Scanning App Store data (day ${Math.floor(days*0.1)}/${days})…`,
+    `Scanning Google Play data (day ${Math.floor(days*0.3)}/${days})…`,
+    `Evaluating rule conditions…`,
+    `Computing precision / recall…`,
+    `Checking for false positives…`,
+    `Finalising results…`,
+  ];
+  for (let i = 0; i < progressMsgs.length; i++) {
+    await new Promise(r => setTimeout(r, 400));
+    const el = document.getElementById('btProgress');
+    if (el) el.textContent = progressMsgs[i];
+  }
+
+  await new Promise(r => setTimeout(r, 300));
+  showBacktestResults(days);
+  btn.classList.remove('running');
+  btn.classList.add('done');
+  document.getElementById('btIcon').textContent = '✓';
+  document.getElementById('btLabel').textContent = 'Done — Run Again';
+  setTimeout(() => {
+    btn.classList.remove('done');
+    document.getElementById('btIcon').textContent = '▶';
+    document.getElementById('btLabel').textContent = 'Run Backtest';
+  }, 3000);
+}
+
+function showBacktestResults(days) {
+  const precision = 0.962;
+  const recall = 0.884;
+  const f1 = (2 * precision * recall / (precision + recall)).toFixed(3);
+  const total = days * 142;
+  const truePos = Math.round(total * precision * 0.72);
+  const falsePos = Math.round(total * (1 - precision) * 0.1);
+
+  const barData = Array.from({length:days===7?7:days===30?15:20}, (_,i) => ({
+    tp: Math.floor(80 + Math.random()*40),
+    fp: Math.floor(1 + Math.random()*5),
+  }));
+
+  document.getElementById('btResultMeta').textContent = `${days}d window · ${total.toLocaleString()} threats evaluated`;
+  document.getElementById('btResults').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="bt-metric"><div class="bt-metric-label">Precision</div><div class="bt-metric-val" style="color:var(--green)">${(precision*100).toFixed(1)}%</div></div>
+      <div class="bt-metric"><div class="bt-metric-label">Recall</div><div class="bt-metric-val" style="color:var(--blue)">${(recall*100).toFixed(1)}%</div></div>
+      <div class="bt-metric"><div class="bt-metric-label">F1 Score</div><div class="bt-metric-val" style="color:var(--amber)">${f1}</div></div>
+      <div class="bt-metric"><div class="bt-metric-label">False Positives</div><div class="bt-metric-val" style="color:${falsePos<20?'var(--green)':'var(--red)'}">${falsePos}</div></div>
+    </div>
+    <div style="font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:5px;letter-spacing:0.06em;text-transform:uppercase">True Positive Rate — ${days}d history</div>
+    <div class="bt-chart" id="btChart"></div>
+    <div class="bt-labels"><span>${days}d ago</span><span>${Math.floor(days/2)}d ago</span><span>Today</span></div>
+    <div style="margin-top:10px;font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px">Sample True Positives</div>
+    ${[
+      {url:'com.metamask.wallet.fake.android',r:'TRUE POSITIVE'},
+      {url:'Trust.Wallet.DeFi.Plus',r:'TRUE POSITIVE'},
+      {url:'com.coinbase.wallet.pro.fake',r:'TRUE POSITIVE'},
+      {url:'bitcoin.wallet.official.btc',r:'FALSE POSITIVE'},
+    ].map(s => `<div class="bt-sample">
+      <div class="bt-sample-url">${s.url}</div>
+      <div class="bt-sample-result" style="background:${s.r==='TRUE POSITIVE'?'var(--green-dim)':'var(--red-dim)'};color:${s.r==='TRUE POSITIVE'?'var(--green)':'var(--red)'}">${s.r}</div>
+    </div>`).join('')}`;
+
+  // Animate bars
+  const chart = document.getElementById('btChart');
+  const max = Math.max(...barData.map(b => b.tp));
+  barData.forEach((b, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bt-bar';
+    bar.style.height = '0%';
+    bar.style.background = `linear-gradient(to top, var(--green), var(--blue))`;
+    bar.title = `${b.tp} true positives, ${b.fp} false positives`;
+    chart.appendChild(bar);
+    setTimeout(() => { bar.style.height = Math.max(8,(b.tp/max)*84) + 'px'; }, i * 30);
+  });
+}
+
+function loadRule(name) {
+  const rules = {
+    'phishing_domain_lookalike': `name: phishing_domain_lookalike\ndescription: Detect lookalike domains targeting crypto brands\nseverity: high\nsources: [domain_registrars, passive_dns]\n\nconditions:\n  - type: edit_distance\n    threshold: 3\n    target_brands: ["MetaMask", "Coinbase", "Arbitrum"]\n  - type: tld_suspicious\n    tlds: [".xyz", ".io", ".net", ".support"]\n  - type: ssl_age\n    max_days: 30\n  - type: keyword_in_path\n    keywords: ["login", "connect", "airdrop", "claim"]\n\nactions:\n  - enrich_with_whois\n  - check_malware_databases\n  - flag_for_review`,
+    'social_account_clone': `name: social_account_clone\ndescription: Detect social media impersonation accounts\nseverity: high\nsources: [twitter_x, telegram, discord]\n\nconditions:\n  - type: username_similarity\n    threshold: 0.88\n    target_accounts: ["@MetaMask", "@CoinbaseWallet"]\n  - type: account_age\n    max_days: 60\n  - type: verified_badge\n    expected: false\n  - type: bio_keyword\n    keywords: ["support", "official", "help", "admin"]\n\nactions:\n  - flag_for_review\n  - initiate_report_to_platform`,
+  };
+  if (rules[name]) document.getElementById('ruleEditor').value = rules[name];
+}
+
+/* ══════════ TAB SWITCHING ══════════ */
+function switchView(view, el) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('viewDetection').style.display = view==='detection'?'flex':'none';
+  document.getElementById('viewBacktest').style.display = view==='backtest'?'flex':'none';
+  document.getElementById('viewTakedown').style.display = view==='takedown'?'flex':'none';
+  if (view==='takedown') renderTakedowns();
+}
+
+function switchSidebar(el, view) {
+  document.querySelectorAll('.slink').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  switchView(view, null);
+  document.querySelectorAll('.ptab').forEach((t,i) => {
+    const views = ['detection','backtest','takedown'];
+    if (views[i]===view) t.classList.add('active');
+  });
+}
+
+/* ══════════ TOAST ══════════ */
+function showToast(icon, msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:40px;right:20px;background:var(--card);border:1px solid var(--border-hi);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text);z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateX(120%);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+  t.innerHTML = `<span style="font-size:15px">${icon}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.style.transform = 'translateX(0)'));
+  setTimeout(() => { t.style.transform = 'translateX(120%)'; setTimeout(() => t.remove(), 400); }, 3000);
+}
+
+/* ══════════ LIVE COUNTER ══════════ */
+let count = 4821044;
+setInterval(() => {
+  count += Math.floor(Math.random() * 80 + 20);
+  document.getElementById('threatCounter').textContent = `⚡ ${count.toLocaleString()} threats scanned today`;
+}, 2000);
+
+/* FILTER BUTTONS */
+document.querySelectorAll('.ffilter').forEach(b => {
+  b.addEventListener('click', function() {
+    const siblings = this.parentElement.querySelectorAll('.ffilter');
+    siblings.forEach(s => s.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+/* INIT */
+renderThreats();
+</script>
+</body>
+</html>
